@@ -11,6 +11,6 @@ public class ValidateTokenEndpoint {
     @Secured
     @Produces(MediaType.APPLICATION_JSON)
     public Response validateToken() {
-        return Response.ok("OK").build();
+        return Response.ok("{message: 'OK', statusCode: 200}").build();
     }
 }

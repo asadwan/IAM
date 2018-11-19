@@ -1,5 +1,6 @@
 import auth.AuthEndpoint;
 import auth.AuthenticationFilter;
+import auth.RegisterUserEndpoint;
 import auth.ValidateTokenEndpoint;
 
 import javax.ws.rs.ApplicationPath;
@@ -12,11 +13,14 @@ public class IAM extends Application {
 
     @Override
     public Set<Class<?>> getClasses() {
+
+        
         HashSet h = new HashSet<Class<?>>();
-        h.add(RegisterUserEndPoint.class);
+        h.add(RegisterUserEndpoint.class);
         h.add( AuthEndpoint.class );
         h.add(ValidateTokenEndpoint.class);
         h.add(AuthenticationFilter.class);
         return h;
     }
+
 }
