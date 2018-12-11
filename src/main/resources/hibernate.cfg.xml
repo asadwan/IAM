@@ -19,5 +19,9 @@
 
         <!-- Mapping With Model Class Containing Annotations -->
         <mapping class="model.User" />
+        <mapping class="model.License"/>
+        <mapping class="model.Journal"/>
+        <mapping class="model.Issue"/>
+        <mapping class="model.Article"/>
     </session-factory>
 </hibernate-configuration>

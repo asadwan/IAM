@@ -1,59 +1,61 @@
 package auth;
 
-import com.mysql.cj.x.protobuf.Mysqlx;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 import model.User;
 import model.UserDAO;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
-import java.security.Key;
+
 import org.json.*;
+import utility.Utility;
+
+import java.util.Date;
 
 
-@Path("/auth")
+@Path("/auth/login")
 public class AuthEndpoint {
 
-
     @POST
-    @Path("/login")
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response authenticateUser(@FormParam("username") String username, @FormParam("password") String password) {
-        JSONObject resposeJson = new JSONObject();
-        try {
-            authenticate(username, password);
+    public Response authenticateUser(@FormParam("username") String username, @FormParam("password") String password,
+                                     @FormParam("user-type") String userType) {
+        JSONObject response = new JSONObject();
+        boolean isAuthentic = authenticate(username, password, userType);
+        if (isAuthentic) {
             String token = issueToken(username);
-            resposeJson.put("message", "OK");
-            resposeJson.put("statusCode", 200);
-            NewCookie cookie = new NewCookie("token", token, null, null, null, 0, true, true);
-            return Response.ok(resposeJson.toString()).cookie(cookie).build();
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            resposeJson.put("message", "UNAUTHORIZED");
-            resposeJson.put("statusCode", 401);
-            return Response.status(Response.Status.UNAUTHORIZED).entity(resposeJson.toString()).build();
+            response.put("message", "OK");
+            response.put("statusCode", 200);
+            response.put("token", token);
+            return Response.status(Response.Status.OK).entity(response.toString()).build();
+        } else {
+            response.put("message", "NOT FOUND");
+            response.put("statusCode", 404);
+            return Response.status(Response.Status.NOT_FOUND).entity(response.toString()).build();
         }
     }
 
-
-    private void authenticate(String username, String password) throws Exception {
-
+    private boolean authenticate(String username, String password, String userType) {
         User user = UserDAO.getUser(username);
-        System.out.println(user.getName());
-        if (!user.getPassword().equals(password)) {
-            throw new Exception();
+        if ((user == null) || !user.getPasswordHash().equals(Utility.sha160(password))) {
+            return false;
+        } else if (!user.getUserType().equalsIgnoreCase("admin")
+                && !user.getUserType().equalsIgnoreCase(userType)) {
+            return false;
         }
+        return true;
     }
 
     private String issueToken(String username) {
-
-        Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-        //String jws = Jwts.builder().setSubject(username).setExpiration(new Date() + 1800)
-        return "";
+        String token = Utility.sha160(username + new Date());
+        User user = UserDAO.getUser(username);
+        user.setToken(token);
+        try {
+            UserDAO.updateUser(user);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return token;
     }
 }

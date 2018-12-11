@@ -1,31 +1,19 @@
 package model;
 
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.exception.ConstraintViolationException;
-import org.hibernate.service.ServiceRegistry;
+import utility.Utility;
 
 public class UserDAO {
 
-    public static SessionFactory getSessionFactory() {
-
-        // Creating Configuration Instance & Passing Hibernate Configuration File
-        Configuration configuration = new Configuration();
-        SessionFactory sessionFactory = configuration.configure().buildSessionFactory();
-        return sessionFactory;
-    }
-
     public static String createUser(User newUser) {
-        Session session = getSessionFactory().openSession();
+        Session session = Utility.getSessionFactory().openSession();
         try {
             Transaction transaction = session.beginTransaction();
             session.save(newUser);
             transaction.commit();
         } catch (Exception e) {
-            System.out.println("A user with same credentials already exists!!");
+            e.printStackTrace();
         } finally {
             session.close();
         }
@@ -33,7 +21,7 @@ public class UserDAO {
     }
 
     public static void deleteUser(User newUser) {
-        Session session = getSessionFactory().openSession();
+        Session session = Utility.getSessionFactory().openSession();
         Transaction transaction = session.beginTransaction();
         session.delete(newUser);
         transaction.commit();
@@ -41,10 +29,22 @@ public class UserDAO {
     }
 
     public static User getUser(String username) {
-        Session session = getSessionFactory().openSession();
-        User user = session.load(User.class, username);
-        //session.close();
+        Session session = Utility.getSessionFactory().openSession();
+        User user = session.get(User.class, username);
+        session.close();
         return user;
     }
 
+    public static void updateUser(User user) throws Exception {
+        Session session = Utility.getSessionFactory().openSession();
+        try {
+            Transaction transaction = session.beginTransaction();
+            session.update(user);
+            transaction.commit();
+        } catch (Exception e) {
+            throw new Exception();
+        } finally {
+            session.close();
+        }
+    }
 }
